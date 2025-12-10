@@ -1,11 +1,7 @@
-package ch.supsi.fscli.backend.business.command;
+package ch.supsi.fscli.backend.business.command.commands;
 
-import ch.supsi.fscli.backend.business.command.commands.AbstractValidatedCommand;
-import ch.supsi.fscli.backend.business.command.commands.TouchCommand;
 import ch.supsi.fscli.backend.business.command.business.CommandDetails;
 import ch.supsi.fscli.backend.business.command.business.CommandHelpContainer;
-import ch.supsi.fscli.backend.business.command.commands.CommandContext;
-import ch.supsi.fscli.backend.business.command.commands.CommandResult;
 import ch.supsi.fscli.backend.business.command.commands.validators.AbstractValidator;
 import ch.supsi.fscli.backend.business.filesystem.DirectoryNode;
 import ch.supsi.fscli.backend.business.filesystem.FileSystem;
@@ -23,15 +19,16 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TouchCommandTest {
+class MkdirCommandTest {
 
-    private TouchCommand touchCommand;
+    private MkdirCommand mkdirCommand;
     private IFileSystemService fileSystemService;
     private FileSystem fileSystem;
     private CommandHelpContainer commandHelpContainer;
 
     @BeforeEach
     void setUp() {
+        // Reset di tutti i singleton
         resetSingleton(CommandExecutor.class);
         resetSingleton(CommandHelpContainer.class);
         resetSingleton(FileSystemService.class);
@@ -39,6 +36,7 @@ class TouchCommandTest {
         resetSingleton(CommandParser.class);
         resetSingleton(FileSystem.class);
 
+        // Inizializza dipendenze
         fileSystem = FileSystem.getInstance();
         fileSystemService = FileSystemService.getInstance(fileSystem);
 
@@ -47,10 +45,11 @@ class TouchCommandTest {
 
         commandHelpContainer = CommandHelpContainer.getInstance(translator);
 
+        // Inizializza il comando specifico
         Map<String, CommandDetails> m = commandHelpContainer.getCommandDetailsMap();
-        String synopsis = m.get("touch").synopsis();
-        String descr = m.get("touch").description();
-        touchCommand = new TouchCommand(fileSystemService, "touch", synopsis, descr);
+        String synopsis = m.get("mkdir").synopsis();
+        String descr = m.get("mkdir").description();
+        mkdirCommand = new MkdirCommand(fileSystemService, "mkdir", synopsis, descr);
         AbstractValidatedCommand.setTranslator(BackendTranslator.getInstance());
         AbstractValidator.setTranslator(BackendTranslator.getInstance());
     }
@@ -68,12 +67,16 @@ class TouchCommandTest {
     @Test
     void testExecute_Success() {
         List<String> arguments = new ArrayList<>();
-        arguments.add("testFile.txt");
+        arguments.add("testDir");
         List<String> options = new ArrayList<>();
-        CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = touchCommand.execute(context);
+
+        DirectoryNode currentDir = fileSystemService.getCurrentDirectory();
+        CommandContext context = new CommandContext(currentDir, arguments, options);
+
+        CommandResult result = mkdirCommand.execute(context);
+
         assertTrue(result.isSuccess());
-        assertNotNull(fileSystemService.getCurrentDirectory().getChild("testFile.txt"));
+        assertNotNull(currentDir.getChild("testDir"));
     }
 
     @Test
@@ -81,7 +84,7 @@ class TouchCommandTest {
         List<String> arguments = new ArrayList<>();
         List<String> options = new ArrayList<>();
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = touchCommand.execute(context);
+        CommandResult result = mkdirCommand.execute(context);
         assertFalse(result.isSuccess());
     }
 
@@ -89,53 +92,64 @@ class TouchCommandTest {
     void testExecute_NullArguments() {
         List<String> options = new ArrayList<>();
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), null, options);
-        CommandResult result = touchCommand.execute(context);
+        CommandResult result = mkdirCommand.execute(context);
         assertFalse(result.isSuccess());
     }
 
     @Test
-    void testExecute_FileAlreadyExistsAsDir() {
+    void testExecute_EmptyDirectoryName() {
+        List<String> arguments = new ArrayList<>();
+        arguments.add("");
+        List<String> options = new ArrayList<>();
+        CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
+        CommandResult result = mkdirCommand.execute(context);
+        assertFalse(result.isSuccess());
+    }
+
+    @Test
+    void testExecute_DirectoryAlreadyExists() {
         List<String> arguments = new ArrayList<>();
         arguments.add("existingDir");
         List<String> options = new ArrayList<>();
         fileSystemService.createDirectory("existingDir");
+
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = touchCommand.execute(context);
+        CommandResult result = mkdirCommand.execute(context);
         assertFalse(result.isSuccess());
     }
 
     @Test
-    @DisplayName("Testa creazione file con path assoluto")
+    @DisplayName("Testa creazione con path assoluto (/)")
     void testExecute_PathResolution_Absolute() {
         fileSystemService.createDirectory("docs");
 
         List<String> arguments = new ArrayList<>();
-        arguments.add("/docs/file.txt");
+        arguments.add("/docs/newDir");
         List<String> options = new ArrayList<>();
 
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = touchCommand.execute(context);
+        CommandResult result = mkdirCommand.execute(context);
 
         assertTrue(result.isSuccess());
         Inode docsNode = fileSystem.resolveNode("/docs");
         assertInstanceOf(DirectoryNode.class, docsNode);
-        assertNotNull(((DirectoryNode) docsNode).getChild("file.txt"));
+        assertNotNull(((DirectoryNode) docsNode).getChild("newDir"));
     }
 
     @Test
-    @DisplayName("Testa creazione file con path relativo '..'")
+    @DisplayName("Testa creazione con path relativo '..'")
     void testExecute_PathResolution_DotDot() {
         fileSystemService.createDirectory("docs");
         fileSystem.changeDirectory("/docs");
 
         List<String> arguments = new ArrayList<>();
-        arguments.add("../file.txt");
+        arguments.add("../otherDir");
         List<String> options = new ArrayList<>();
 
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = touchCommand.execute(context);
+        CommandResult result = mkdirCommand.execute(context);
 
         assertTrue(result.isSuccess());
-        assertNotNull(fileSystem.resolveNode("/file.txt"));
+        assertNotNull(fileSystem.resolveNode("/otherDir"));
     }
 }

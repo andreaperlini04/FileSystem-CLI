@@ -1,4 +1,4 @@
-package ch.supsi.fscli.backend.business.command;
+package ch.supsi.fscli.backend.business.command.commands;
 
 import ch.supsi.fscli.backend.business.command.business.CommandParser;
 import ch.supsi.fscli.backend.business.command.business.InvalidCommandException;

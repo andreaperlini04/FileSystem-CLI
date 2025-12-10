@@ -1,11 +1,7 @@
-package ch.supsi.fscli.backend.business.command;
+package ch.supsi.fscli.backend.business.command.commands;
 
-import ch.supsi.fscli.backend.business.command.commands.AbstractValidatedCommand;
-import ch.supsi.fscli.backend.business.command.commands.RmCommand;
 import ch.supsi.fscli.backend.business.command.business.CommandDetails;
 import ch.supsi.fscli.backend.business.command.business.CommandHelpContainer;
-import ch.supsi.fscli.backend.business.command.commands.CommandContext;
-import ch.supsi.fscli.backend.business.command.commands.CommandResult;
 import ch.supsi.fscli.backend.business.command.commands.validators.AbstractValidator;
 import ch.supsi.fscli.backend.business.filesystem.DirectoryNode;
 import ch.supsi.fscli.backend.business.filesystem.FileSystem;

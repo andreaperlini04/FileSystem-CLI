@@ -1,16 +1,12 @@
-package ch.supsi.fscli.backend.business.command;
+package ch.supsi.fscli.backend.business.command.commands;
 
-import ch.supsi.fscli.backend.business.command.commands.AbstractValidatedCommand;
+import ch.supsi.fscli.backend.business.command.business.CommandDetails;
+import ch.supsi.fscli.backend.business.command.business.CommandHelpContainer;
 import ch.supsi.fscli.backend.business.command.commands.validators.AbstractValidator;
 import ch.supsi.fscli.backend.business.filesystem.DirectoryNode;
 import ch.supsi.fscli.backend.business.filesystem.FileSystem;
 import ch.supsi.fscli.backend.business.filesystem.Inode;
 import ch.supsi.fscli.backend.business.service.FileSystemService;
-import ch.supsi.fscli.backend.business.command.commands.RmdirCommand;
-import ch.supsi.fscli.backend.business.command.business.CommandDetails;
-import ch.supsi.fscli.backend.business.command.business.CommandHelpContainer;
-import ch.supsi.fscli.backend.business.command.commands.CommandContext;
-import ch.supsi.fscli.backend.business.command.commands.CommandResult;
 import ch.supsi.fscli.backend.business.service.IFileSystemService;
 import ch.supsi.fscli.backend.util.BackendTranslator;
 import ch.supsi.fscli.backend.business.command.business.CommandExecutor;
@@ -19,16 +15,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class RmdirCommandTest {
+class TouchCommandTest {
 
-    private RmdirCommand rmdirCommand;
+    private TouchCommand touchCommand;
     private IFileSystemService fileSystemService;
     private FileSystem fileSystem;
     private CommandHelpContainer commandHelpContainer;
@@ -42,14 +35,18 @@ class RmdirCommandTest {
         resetSingleton(CommandParser.class);
         resetSingleton(FileSystem.class);
 
-        BackendTranslator translator = BackendTranslator.getInstance();
-        translator.setLocaleDefault(Locale.US);
-        commandHelpContainer = CommandHelpContainer.getInstance(translator);
         fileSystem = FileSystem.getInstance();
         fileSystemService = FileSystemService.getInstance(fileSystem);
 
+        BackendTranslator translator = BackendTranslator.getInstance();
+        translator.setLocaleDefault(Locale.US);
+
+        commandHelpContainer = CommandHelpContainer.getInstance(translator);
+
         Map<String, CommandDetails> m = commandHelpContainer.getCommandDetailsMap();
-        rmdirCommand = new RmdirCommand(fileSystemService, "rmdir", m.get("rmdir").synopsis(), m.get("rmdir").description());
+        String synopsis = m.get("touch").synopsis();
+        String descr = m.get("touch").description();
+        touchCommand = new TouchCommand(fileSystemService, "touch", synopsis, descr);
         AbstractValidatedCommand.setTranslator(BackendTranslator.getInstance());
         AbstractValidator.setTranslator(BackendTranslator.getInstance());
     }
@@ -66,104 +63,75 @@ class RmdirCommandTest {
 
     @Test
     void testExecute_Success() {
-        fileSystemService.createDirectory("testDir");
-
         List<String> arguments = new ArrayList<>();
-        arguments.add("testDir");
+        arguments.add("testFile.txt");
         List<String> options = new ArrayList<>();
-
-        DirectoryNode currentDir = fileSystemService.getCurrentDirectory();
-        CommandContext context = new CommandContext(currentDir, arguments, options);
-
-        CommandResult result = rmdirCommand.execute(context);
-        System.out.println(fileSystem);
+        CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
+        CommandResult result = touchCommand.execute(context);
         assertTrue(result.isSuccess());
-        assertNull(currentDir.getChild("testDir"));
+        assertNotNull(fileSystemService.getCurrentDirectory().getChild("testFile.txt"));
     }
 
     @Test
     void testExecute_MissingArguments() {
         List<String> arguments = new ArrayList<>();
-        List<String> options = new ArrayList<>(); // Corretto: da Map a List
+        List<String> options = new ArrayList<>();
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = rmdirCommand.execute(context);
+        CommandResult result = touchCommand.execute(context);
         assertFalse(result.isSuccess());
     }
 
     @Test
     void testExecute_NullArguments() {
-        List<String> options = new ArrayList<>(); // Corretto: da Map a List
+        List<String> options = new ArrayList<>();
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), null, options);
-        CommandResult result = rmdirCommand.execute(context);
+        CommandResult result = touchCommand.execute(context);
         assertFalse(result.isSuccess());
     }
 
     @Test
-    void testExecute_DirectoryDoesNotExist() {
+    void testExecute_FileAlreadyExistsAsDir() {
         List<String> arguments = new ArrayList<>();
-        arguments.add("nonExistentDir");
-        List<String> options = new ArrayList<>(); // Corretto: da Map a List
+        arguments.add("existingDir");
+        List<String> options = new ArrayList<>();
+        fileSystemService.createDirectory("existingDir");
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = rmdirCommand.execute(context);
+        CommandResult result = touchCommand.execute(context);
         assertFalse(result.isSuccess());
     }
 
     @Test
-    void testExecute_DirectoryNotEmpty() {
-        fileSystemService.createDirectory("parentDir");
-        fileSystemService.createFile("/parentDir/file.txt");
-
-        List<String> arguments = new ArrayList<>();
-        arguments.add("parentDir");
-        List<String> options = new ArrayList<>(); // Corretto: da Map a List
-
-        DirectoryNode currentDir = fileSystemService.getCurrentDirectory();
-        CommandContext context = new CommandContext(currentDir, arguments, options);
-        CommandResult result = rmdirCommand.execute(context);
-
-
-        assertTrue(result.isSuccess()); // Il comando rmdir ha successo ma stampa un output
-        assertNotNull(currentDir.getChild("parentDir"));
-    }
-
-    @Test
-    @DisplayName("Testa rimozione dir con path assoluto")
+    @DisplayName("Testa creazione file con path assoluto")
     void testExecute_PathResolution_Absolute() {
         fileSystemService.createDirectory("docs");
-        fileSystemService.createDirectory("/docs/dirB");
-
-        Inode docsNode = fileSystem.resolveNode("/docs");
-        assertNotNull(((DirectoryNode) docsNode).getChild("dirB"));
 
         List<String> arguments = new ArrayList<>();
-        arguments.add("/docs/dirB");
+        arguments.add("/docs/file.txt");
         List<String> options = new ArrayList<>();
 
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = rmdirCommand.execute(context);
-        System.out.println(fileSystem);
+        CommandResult result = touchCommand.execute(context);
+
         assertTrue(result.isSuccess());
-        assertNull(((DirectoryNode) docsNode).getChild("dirB"));
+        Inode docsNode = fileSystem.resolveNode("/docs");
+        assertInstanceOf(DirectoryNode.class, docsNode);
+        assertNotNull(((DirectoryNode) docsNode).getChild("file.txt"));
     }
 
     @Test
-    @DisplayName("Testa rimozione dir con path relativo '..'")
+    @DisplayName("Testa creazione file con path relativo '..'")
     void testExecute_PathResolution_DotDot() {
-        fileSystemService.createDirectory("dirA");
         fileSystemService.createDirectory("docs");
         fileSystem.changeDirectory("/docs");
 
-        assertNotNull(fileSystem.resolveNode("/dirA"));
-
         List<String> arguments = new ArrayList<>();
-        arguments.add("../dirA");
+        arguments.add("../file.txt");
         List<String> options = new ArrayList<>();
 
         CommandContext context = new CommandContext(fileSystemService.getCurrentDirectory(), arguments, options);
-        CommandResult result = rmdirCommand.execute(context);
+        CommandResult result = touchCommand.execute(context);
 
-        System.out.println(fileSystem);
         assertTrue(result.isSuccess());
-        assertNull(fileSystem.resolveNode("/dirA"));
+        assertNotNull(fileSystem.resolveNode("/file.txt"));
     }
 }
