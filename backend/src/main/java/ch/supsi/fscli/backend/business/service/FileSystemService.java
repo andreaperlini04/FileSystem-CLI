@@ -278,7 +278,7 @@ public class FileSystemService implements IFileSystemService{
             throw new IllegalArgumentException(i18n.getString("file_already_exists_prefix") + fileName);
         }
 
-        FileNode newFile = new FileNode(targetDir);
+        FileNode newFile = new FileNode();
         targetDir.addChild(fileName, newFile);
     }
 

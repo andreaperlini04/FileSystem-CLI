@@ -6,7 +6,6 @@ import ch.supsi.fscli.backend.business.dto.IFsStateDto;
 import ch.supsi.fscli.backend.business.dto.IFsStateMapper;
 import ch.supsi.fscli.backend.business.filesystem.*;
 import ch.supsi.fscli.backend.business.service.ISaveDataService;
-import ch.supsi.fscli.backend.business.service.SaveDataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -60,7 +59,7 @@ class FsStateMapperTest {
         home.addChild("user", user);
 
         // Create /home/user/file.txt
-        FileNode file = new FileNode(user);
+        FileNode file = new FileNode();
         user.addChild("file.txt", file);
 
         // Create /home/link -> /home/user/file.txt
@@ -145,7 +144,7 @@ class FsStateMapperTest {
     void testSerializationToFile() {
         // Arrange
         DirectoryNode root = fileSystem.getRoot();
-        FileNode file = new FileNode(root);
+        FileNode file = new FileNode();
         root.addChild("test.txt", file);
 
         File outputFile = new File(tempDir, "filesystem.json");

@@ -7,7 +7,6 @@ import java.util.ResourceBundle;
 @Singleton
 public class BackendTranslator {
     private static final String BUNDLE_BASE_NAME = "i18n.responses";
-    private static final String BUNDLE_BASE_NAME_TEST = "i18n.test";
 
     // Definiamo una costante per il fallback sicuro
     private static final Locale DEFAULT_FALLBACK_LOCALE = Locale.US;
@@ -20,11 +19,11 @@ public class BackendTranslator {
     /* Testing purpose */
     public void setLocaleDefault(Locale locale){
         try {
-            resourceBundle = ResourceBundle.getBundle(BUNDLE_BASE_NAME_TEST, locale);
+            resourceBundle = ResourceBundle.getBundle(BUNDLE_BASE_NAME, locale);
             // Se la lingua caricata non corrisponde a quella richiesta, usa il fallback
             if (!resourceBundle.getLocale().getLanguage().equals(locale.getLanguage())) {
                 System.err.println("No matching language bundle for: " + locale + ". Falling back to default (US).");
-                resourceBundle = ResourceBundle.getBundle(BUNDLE_BASE_NAME_TEST, DEFAULT_FALLBACK_LOCALE);
+                resourceBundle = ResourceBundle.getBundle(BUNDLE_BASE_NAME, DEFAULT_FALLBACK_LOCALE);
                 this.currentLocale = DEFAULT_FALLBACK_LOCALE;
             } else {
                 this.currentLocale = locale;
@@ -32,7 +31,7 @@ public class BackendTranslator {
         } catch (Exception e) {
             System.err.println("Could not load resource bundle for locale: " + locale + ". Falling back to default (US).");
             // Qui il fallback è sicuro perché sappiamo che test_en_US esiste
-            resourceBundle = ResourceBundle.getBundle(BUNDLE_BASE_NAME_TEST, DEFAULT_FALLBACK_LOCALE);
+            resourceBundle = ResourceBundle.getBundle(BUNDLE_BASE_NAME, DEFAULT_FALLBACK_LOCALE);
             this.currentLocale = DEFAULT_FALLBACK_LOCALE;
         }
     }

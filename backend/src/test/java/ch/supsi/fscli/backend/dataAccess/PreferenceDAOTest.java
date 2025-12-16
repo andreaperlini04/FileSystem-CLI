@@ -53,7 +53,7 @@ public class PreferenceDAOTest {
         assertTrue(Files.exists(preferencesFile), "Il file preferences.properties dovrebbe essere creato");
 
         // Assert: Valori di default
-        assertEquals("it_IT", prefs.getProperty("language-tag"));
+        assertEquals("en_US", prefs.getProperty("language-tag"));
         assertEquals("80", prefs.getProperty("column"));
     }
 
@@ -107,8 +107,8 @@ public class PreferenceDAOTest {
 
         // Assert
         // La logica di checkFileLoadedPreferences() dice: se manca qualcosa, resetta tutto ai default.
-        // Quindi mi aspetto "it_IT" (default) e non "de_DE".
-        assertEquals("it_IT", loaded.getProperty("language-tag"));
+        // Quindi mi aspetto "en_US" (default) e non "de_DE".
+        assertEquals("en_US", loaded.getProperty("language-tag"));
     }
 
     @Test
@@ -152,7 +152,7 @@ public class PreferenceDAOTest {
         // Assert
         // Il metodo dovrebbe gestire l'eccezione stampando su stderr e ritornando i default in memoria
         assertNotNull(prefs);
-        assertEquals("it_IT", prefs.getProperty("language-tag"));
+        assertEquals("en_US", prefs.getProperty("language-tag"));
 
         // Verifica che il file properties NON sia stato creato dentro il file .fscli (impossibile)
         assertFalse(Files.exists(dir.resolve("preferences.properties")));
