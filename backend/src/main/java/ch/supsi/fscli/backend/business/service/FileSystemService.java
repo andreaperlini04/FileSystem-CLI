@@ -23,7 +23,6 @@ public class FileSystemService implements IFileSystemService{
         return fileSystem.getCurrentDirectory();
     }
 
-    // FIXME: ↓ capire se va tenuto o no ↓
     public void setTranslator(BackendTranslator translator) {
         i18n = translator;
     }

@@ -69,7 +69,6 @@ public class RmdirCommand extends AbstractValidatedCommand{
         if (hasErrors) {
             return CommandResult.error(errors.toString().trim());
         }
-        // TODO ADD SOFT LINK CONTROLL
         return CommandResult.success(output.toString().trim());
     }
 

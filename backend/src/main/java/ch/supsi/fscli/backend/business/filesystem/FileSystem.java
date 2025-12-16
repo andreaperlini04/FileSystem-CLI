@@ -15,7 +15,6 @@ public class FileSystem implements FileSystemComponent, IFileSystem
     private DirectoryNode root;
     private DirectoryNode currentDirectory;
     private CommandExecutor commandExecutor;
-    private List<ICommand> commandList; // FIXME: perché non è utilizzata?
     private boolean dataToSave;
     private static BackendTranslator i18n;
 
@@ -190,9 +189,6 @@ public class FileSystem implements FileSystemComponent, IFileSystem
     @Override
     public String executeCommand(String command) {
         CommandResult result = commandExecutor.execute(command);
-        // FIXME: Pensa al FileSystem come se fosse il disco rigido fisico del tuo computer.
-        //  Secondo te, il disco rigido dovrebbe sapere come interpretare i comandi testuali scritti da un utente (come "ls" o "mkdir"),
-        //  oppure il suo compito dovrebbe essere solo quello di leggere e scrivere dati quando qualcuno glielo chiede?
         checkDataToSave(command);
         if(result.isSuccess()) {
 
